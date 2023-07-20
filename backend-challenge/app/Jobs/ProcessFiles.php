@@ -39,7 +39,6 @@ class ProcessFiles implements ShouldQueue
      */
     public function handle(): void
     {
-
         $jsonContents = file_get_contents($this->filePath);
         // Parse the JSON data into an associative array
         $jsonData = json_decode($jsonContents, true);
@@ -47,6 +46,9 @@ class ProcessFiles implements ShouldQueue
         foreach ($jsonData as $record) {
             // Extract the relevant data from the $record array and assignt it to a user and to credit card and then saving them
             if ($this->isValidRecord($record)) {
+                if ($this->crediCardExists($record['credit_card']['number'],$record['credit_card']['name'],$record['credit_card']['type'],$record['credit_card']['expirationDate'])) {
+                    continue;
+                }
                 $creditCard = new CreditCard([
                     'type' => $record['credit_card']['type'],
                     'number' => $record['credit_card']['number'],
@@ -94,4 +96,16 @@ class ProcessFiles implements ShouldQueue
         // Check if the age falls within the required criteria (18 to 65 or unknown)
         return $age >= 18 && $age <= 65;
     }
+
+
+    protected function crediCardExists(int $cardNumber, string $name, string $type, string $expirationDate): bool
+    {
+        return CreditCard::where('number', $cardNumber)
+        ->where('name', $name)
+        ->where('type', $type)
+        ->where('expirationDate',$expirationDate)
+        ->exists();
+    }
+
+
 }
