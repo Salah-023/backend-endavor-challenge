@@ -44,7 +44,7 @@ class ProcessFiles implements ShouldQueue
         $jsonData = json_decode($jsonContents, true);
 
         foreach ($jsonData as $record) {
-            // Extract the relevant data from the $record array and assignt it to a user and to credit card and then saving them
+            // Extract the relevant data from the $record array and assignt it to a user and to credit card and then saving them to the database
             if ($this->isValidRecord($record)) {
                 if ($this->crediCardExists($record['credit_card']['number'],$record['credit_card']['name'],$record['credit_card']['type'],$record['credit_card']['expirationDate'])) {
                     continue;
@@ -82,15 +82,12 @@ class ProcessFiles implements ShouldQueue
         if (!isset($record['date_of_birth'])) {
             return true;
         }
-
         try {
             $dateOfBirth = \Carbon\Carbon::parse($record['date_of_birth']);
         } catch (\Exception $e) {
-            // Failed to parse date_of_birth, handle error or return false, depending on your requirements
             return false;
         }
 
-        // Calculate the age based on the date_of_birth
         $age = $dateOfBirth->age;
 
         // Check if the age falls within the required criteria (18 to 65 or unknown)
@@ -100,6 +97,7 @@ class ProcessFiles implements ShouldQueue
 
     protected function crediCardExists(int $cardNumber, string $name, string $type, string $expirationDate): bool
     {
+        //check if a credit card already exist whit this kind of infomation
         return CreditCard::where('number', $cardNumber)
         ->where('name', $name)
         ->where('type', $type)
